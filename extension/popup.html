@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <img src="icons/icon32.png" alt="" width="18" height="18">
+    <strong>LiveKeep</strong>
+    <a id="settings" href="#" class="muted">Settings</a>
+  </header>
+
+  <section id="main"></section>
+
+  <section id="watch">
+    <h2>Watch list</h2>
+    <p class="note">Records automatically when a channel goes live, even if you’re not watching. Chrome needs to stay open.</p>
+    <form id="watch-form" autocomplete="off">
+      <input id="watch-input" type="text" placeholder="Paste a channel or stream link" aria-label="Channel or stream link">
+      <button type="submit" id="watch-add">Add</button>
+    </form>
+    <button id="watch-this" class="link-button" type="button" hidden>+ Watch this channel</button>
+    <p id="watch-error" class="error" hidden></p>
+    <ul id="watch-list"></ul>
+  </section>
+
+  <p id="upload-status" class="note" hidden></p>
+
+  <section id="history" hidden>
+    <h2>Recent</h2>
+    <ul id="history-list"></ul>
+  </section>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

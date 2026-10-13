@@ -1,0 +1,12 @@
+{
+  "name": "livekeep",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/",
+    "zip": "node scripts/package.mjs"
+  },
+  "devDependencies": {
+    "fake-indexeddb": "^6.0.0"
+  }
+}

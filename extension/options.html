@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>LiveKeep settings</title>
+  <link rel="stylesheet" href="popup.css">
+  <style>
+    body { width: auto; max-width: 520px; margin: 24px auto; padding: 0 16px; }
+    label { display: block; font-weight: 600; margin: 16px 0 4px; }
+    select, input[type=text] { font: inherit; width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
+    button { width: auto; background: var(--blue); color: #fff; }
+    #saved { margin-left: 10px; color: var(--green); }
+    label.check { display: flex; gap: 8px; align-items: center; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <header><img src="icons/icon32.png" alt="" width="18" height="18"><strong>LiveKeep settings</strong></header>
+
+  <label for="destination">Save recordings to</label>
+  <select id="destination"></select>
+  <p class="note">Google Drive uploads as it records, so it's safe even if your computer dies. This computer writes to your Downloads folder and needs no account.</p>
+
+  <label for="quality">Recording quality</label>
+  <select id="quality"></select>
+  <p class="note">Higher quality uses more space. A free Google account has 15 GB shared with Gmail and Photos.</p>
+
+  <label for="partMinutes">Files</label>
+  <select id="partMinutes">
+    <option value="0">One file for the whole recording</option>
+    <option value="5">A new file every 5 minutes</option>
+    <option value="10">A new file every 10 minutes</option>
+    <option value="15">A new file every 15 minutes</option>
+    <option value="30">A new file every 30 minutes</option>
+    <option value="60">A new file every 60 minutes</option>
+  </select>
+  <p class="note">One file is easiest to watch. Recording is equally safe either way: data is uploaded or held on your computer as it records, and nothing is lost if the stream goes private. Splitting only makes files appear in Drive or Downloads sooner during long streams.</p>
+
+  <label class="check"><input id="autoStop" type="checkbox"> Stop automatically when the stream ends or becomes unavailable</label>
+  <p class="note">Off by default: LiveKeep keeps recording until you press Stop, and tells you if YouTube shows an error. Nothing already recorded is ever lost either way.</p>
+
+  <label for="folderName">Folder name</label>
+  <input id="folderName" type="text">
+  <p class="note">Used in Google Drive and inside your Downloads folder. Each recording gets its own subfolder.</p>
+
+  <button id="save">Save</button><span id="saved" hidden>Saved</span>
+  <p class="note">Changes apply to the next recording you start.</p>
+
+  <script type="module" src="options.js"></script>
+</body>
+</html>

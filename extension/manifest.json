@@ -1,0 +1,71 @@
+{
+  "manifest_version": 3,
+  "name": "LiveKeep — save YouTube livestreams to Drive",
+  "short_name": "LiveKeep",
+  "description": "One click records the livestream you're watching and saves it to your Google Drive or your computer as it goes.",
+  "version": "0.1.0",
+  "minimum_chrome_version": "116",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtK+uZqBbhtV/OkFNL1dRlV50ehpp6IxJ/oBv6F76IFijEYsC8VJBcjxut26K/hQYYbJnd85we6znjB3VW5EvVMFD+V+jpwrNBr9EwWSucGQRUHzHmloiBI36AgC2li9xxYCVG8tvcTnUuLmfhB8YNWEW6+OlRsXgJ+oa989+KKmC7XLwMqYRUXqOBZvTl04Dz8AS3+P9JKK4KT82vEfRfLmhQ+VN93lETaPqSuAb5Af5dU/2gsu43FHxFnRcQk/goS4vp64T4XrrRRe/REhpJAF3mjK+qzyc2EG3X4KmhkLZyydLMJQYI6e2GEroYTij0q/Ru9rc5vfXOrsaVhKj5QIDAQAB",
+  "permissions": [
+    "tabCapture",
+    "offscreen",
+    "identity",
+    "storage",
+    "unlimitedStorage",
+    "activeTab",
+    "scripting",
+    "downloads",
+    "alarms"
+  ],
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "https://www.googleapis.com/*"
+  ],
+  "oauth2": {
+    "client_id": "494524398987-qv0pviagvr22h4aph9v2sjomkjuvfd6n.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/drive.file"
+    ]
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "LiveKeep",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "options_page": "options.html",
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "autorec.js",
+        "lib/cropper.js"
+      ],
+      "matches": [
+        "https://www.youtube.com/*"
+      ]
+    }
+  ]
+}
