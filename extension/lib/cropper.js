@@ -6,6 +6,9 @@
 // Tab capture only delivers frames when the page changes. When nothing moves
 // (a paused or "starting soon" screen), the last picture is repeated at least
 // once a second so the recorder always has video to encode.
+//
+// The source can be swapped (setSource) without touching the output track, so a
+// recorder keeps one continuous file when its input has to be re-captured.
 
 const WHOLE_TAB = { x: 0, y: 0, width: 1, height: 1 };
 
@@ -41,18 +44,32 @@ export class VideoCropper {
     this.lastTimestamp = -1; // microseconds
     this.lastEmitMs = 0;
     this.stopped = false;
+    this.sourceFrames = 0; // real frames received from the source (not keep-alive repeats)
+    this.lastSourceFrameMs = performance.now();
 
-    this.pump(new MediaStreamTrackProcessor({ track: sourceTrack }).readable.getReader());
+    this.setSource(sourceTrack);
     this.keepalive = setInterval(() => {
       if (performance.now() - this.lastEmitMs >= KEEPALIVE_MS) this.emit();
     }, KEEPALIVE_MS / 2);
     this.emit(); // a first (black) frame right away, so recording can start
   }
 
+  // Starts drawing from a new input track; the previous one is let go.
+  setSource(track) {
+    this.reader?.cancel().catch(() => {});
+    this.reader = new MediaStreamTrackProcessor({ track }).readable.getReader();
+    this.lastSourceFrameMs = performance.now(); // give the new input a moment to deliver
+    this.pump(this.reader);
+  }
+
+  // Ends quietly when its input ends or is replaced; the keep-alive holds the last
+  // picture until whoever owns the cropper supplies a new source or stops it.
   async pump(reader) {
-    while (!this.stopped) {
+    while (!this.stopped && reader === this.reader) {
       const { value: frame, done } = await reader.read().catch(() => ({ done: true }));
       if (done) break;
+      this.sourceFrames++;
+      this.lastSourceFrameMs = performance.now();
       try {
         this.draw(frame);
         this.emit();
@@ -62,7 +79,6 @@ export class VideoCropper {
         frame.close();
       }
     }
-    this.stop();
   }
 
   // Writes the canvas out as the next frame. Frames are emitted as they happen, so
@@ -85,10 +101,37 @@ export class VideoCropper {
     if (Number.isFinite(region?.viewportAspect) && region.viewportAspect > 0) this.viewportAspect = region.viewportAspect;
   }
 
-  draw(frame) {
+  // Last resort when the input track delivers nothing although the video plays:
+  // copy the <video> element's current picture directly, at the given rate.
+  pullFrom(element, fps) {
+    if (this.pulling) return;
+    this.pullStartFrames = this.sourceFrames;
+    this.pulling = setInterval(() => {
+      if (!element.videoWidth) return;
+      try {
+        this.draw(element);
+        this.emit();
+      } catch {
+        // Try again on the next tick.
+      }
+    }, 1000 / fps);
+  }
+
+  // True once the input track has delivered a good second of frames since pulling began.
+  get inputRecovered() {
+    return this.sourceFrames - this.pullStartFrames >= 25;
+  }
+
+  stopPulling() {
+    clearInterval(this.pulling);
+    this.pulling = null;
+  }
+
+  // `source` is a VideoFrame from the input track, or the <video> element itself.
+  draw(source) {
     const { ctx, width: W, height: H } = this;
-    const fw = frame.displayWidth;
-    const fh = frame.displayHeight;
+    const fw = source.displayWidth ?? source.videoWidth;
+    const fh = source.displayHeight ?? source.videoHeight;
     const r = this.region ?? WHOLE_TAB;
     const { cx, cy, cw, ch } = contentBox(fw, fh, this.viewportAspect);
 
@@ -110,7 +153,7 @@ export class VideoCropper {
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, W, H);
     if (ex - sx >= 1 && ey - sy >= 1) {
-      ctx.drawImage(frame, sx, sy, ex - sx, ey - sy,
+      ctx.drawImage(source, sx, sy, ex - sx, ey - sy,
         ox + (sx - vx) * scale, oy + (sy - vy) * scale, (ex - sx) * scale, (ey - sy) * scale);
     }
   }
@@ -119,6 +162,8 @@ export class VideoCropper {
     if (this.stopped) return;
     this.stopped = true;
     clearInterval(this.keepalive);
+    this.stopPulling();
+    this.reader?.cancel().catch(() => {});
     this.writer.close().catch(() => {});
     this.track.stop();
   }

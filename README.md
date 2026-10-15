@@ -72,7 +72,10 @@ content script ── where the video is on screen ──▶ cropper (only the v
   - **Drive:** resumable uploads, sent in 256 KiB multiples while recording, resent from wherever Drive says it stopped, and finalized once a part is closed.
   - **This computer:** each finished part is written once through `chrome.downloads`.
 - `extension/lib/youtube.js`: understands pasted links and reads a page's live, scheduled or ended status from YouTube's own player data.
-- `extension/autorec.js`: records a watch-list stream inside its tab. Chrome only allows tab capture after a click, so it records the player's own stream instead. It plays the video unmuted while the tab itself is muted: Chrome pauses muted videos in hidden tabs, but this way the recording keeps its sound and you hear nothing. It pauses recording during ads, presses Skip and "Continue watching?", and starts a new part if YouTube swaps the video source.
+- `extension/autorec.js`: records a watch-list stream inside its tab. Chrome only allows tab capture after a click, so it records the player's own stream instead. It plays the video unmuted while the tab itself is muted: Chrome pauses muted videos in hidden tabs, but this way the recording keeps its sound and you hear nothing. It pauses recording during ads and presses Skip and "Continue watching?".
+  - **Self-healing capture:** YouTube sometimes reloads the video inside the same player, for example on fullscreen or a quality change, and the capture can stop receiving frames while still reporting itself as working. Once a second, LiveKeep checks whether the video is playing while no frames or sound reach the recording. If so, it takes a fresh capture of the player and plugs it into the same file within about 3 seconds.
+  - **Fallback:** if a fresh capture doesn't help either, LiveKeep copies frames straight from the player until capturing works again.
+  - **Audio handover:** a player feeds only one audio capture at a time, so the old capture is released completely before a new one is made.
 - `extension/content.js`: while recording, reports where the video sits on screen (including the miniplayer). It also watches for the "unavailable / private / removed" screens and for the stream ending. It never draws anything, because anything on the page would end up in the recording.
 
 ## Development

@@ -94,6 +94,7 @@
     try {
       const { AutoRecorder } = await import(chrome.runtime.getURL('autorec.js'));
       auto = new AutoRecorder(job);
+      globalThis.__liveKeepAuto = auto; // isolated world only; handy for diagnosing in DevTools
       await auto.start();
     } catch (e) {
       send({ to: 'sw', type: 'autoProblem', recordingId: job.recording.id, message: e.message, fatal: true });
